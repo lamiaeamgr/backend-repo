@@ -8,21 +8,24 @@ node {
 
     def buildOk = false
     try {
+        // Groovy `def NODE_VERSION` is not a shell variable — with `set -u`, bare `${NODE_VERSION}` in sh ''' fails.
         stage('Prepare Node toolchain') {
-            sh '''
-                set -eux
-                command -v curl >/dev/null 2>&1 || { echo "Install curl on the agent."; exit 1; }
-                NROOT="${WORKSPACE}/.jenkins-node"
-                NODE_HOME="${NROOT}/node-v${NODE_VERSION}-linux-x64"
-                mkdir -p "${NROOT}"
-                if [ ! -x "${NODE_HOME}/bin/node" ]; then
-                    curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" \
-                        -o "/tmp/node-${NODE_VERSION}.tar.gz"
-                    tar -xzf "/tmp/node-${NODE_VERSION}.tar.gz" -C "${NROOT}"
-                fi
-                echo "export NODE_HOME=\"${NODE_HOME}\"" > "${WORKSPACE}/.jenkins-node-env"
-                echo "export PATH=\"${NODE_HOME}/bin:\$PATH\"" >> "${WORKSPACE}/.jenkins-node-env"
-            '''
+            withEnv(["NODE_VERSION=${NODE_VERSION}"]) {
+                sh '''
+                    set -eux
+                    command -v curl >/dev/null 2>&1 || { echo "Install curl on the agent."; exit 1; }
+                    NROOT="${WORKSPACE}/.jenkins-node"
+                    NODE_HOME="${NROOT}/node-v${NODE_VERSION}-linux-x64"
+                    mkdir -p "${NROOT}"
+                    if [ ! -x "${NODE_HOME}/bin/node" ]; then
+                        curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.gz" \
+                            -o "/tmp/node-${NODE_VERSION}.tar.gz"
+                        tar -xzf "/tmp/node-${NODE_VERSION}.tar.gz" -C "${NROOT}"
+                    fi
+                    echo "export NODE_HOME=\"${NODE_HOME}\"" > "${WORKSPACE}/.jenkins-node-env"
+                    echo "export PATH=\"${NODE_HOME}/bin:\$PATH\"" >> "${WORKSPACE}/.jenkins-node-env"
+                '''
+            }
         }
 
         stage('Install Dependencies') {
