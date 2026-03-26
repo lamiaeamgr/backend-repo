@@ -8,6 +8,12 @@ node {
 
     def buildOk = false
     try {
+        // Scripted pipelines do not always get a full Git checkout (e.g. "Lightweight checkout" only fetches the Jenkinsfile).
+        // Explicit checkout puts package.json and the rest of the repo in WORKSPACE.
+        stage('Checkout') {
+            checkout scm
+        }
+
         // Groovy `def NODE_VERSION` is not a shell variable — with `set -u`, bare `${NODE_VERSION}` in sh ''' fails.
         stage('Prepare Node toolchain') {
             withEnv(["NODE_VERSION=${NODE_VERSION}"]) {

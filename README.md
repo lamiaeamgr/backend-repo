@@ -90,7 +90,10 @@ Workflow: `.github/workflows/ci.yml`
 - Runs build step
 
 ## CD (Jenkins)
-Pipeline: `Jenkinsfile`
+Pipeline: `Jenkinsfile` (scripted pipeline; includes an explicit `checkout scm` so the full repo — `package.json`, etc. — is in the workspace).
+
+In the Jenkins job, under the Git **Pipeline** repository: leave **Lightweight checkout** unchecked if you still see an empty workspace.
+
 - Checkout
 - Install dependencies
 - Run tests
