@@ -64,6 +64,19 @@ node {
             '''
         }
 
+        // Same Jenkins config as frontend: server name "sonarqube", tool "SonarQubeScanner".
+        // Creates/updates project key "backend-repo" (see sonar-project.properties).
+        stage('SonarQube Analysis') {
+            withSonarQubeEnv('sonarqube') {
+                def scannerHome = tool 'SonarQubeScanner'
+                sh """
+                    set -eux
+                    . "\${WORKSPACE}/.jenkins-node-env"
+                    "${scannerHome}/bin/sonar-scanner"
+                """
+            }
+        }
+
         stage('Docker Build & Run') {
             def rc = sh(script: 'command -v docker >/dev/null 2>&1', returnStatus: true)
             if (rc != 0) {
