@@ -33,7 +33,12 @@ node {
                 set -eux
                 . "${WORKSPACE}/.jenkins-node-env"
                 node -v && npm -v
-                npm ci
+                if [ -f package-lock.json ]; then
+                    npm ci
+                else
+                    echo "WARNING: package-lock.json missing in repo — using npm install. Commit and push package-lock.json for reproducible CI."
+                    npm install
+                fi
             '''
         }
 

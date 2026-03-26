@@ -34,6 +34,8 @@ npm test
 npm run build
 ```
 
+**Jenkins / CI:** keep **`package-lock.json` committed** in Git so `npm ci` works. If it is missing from the remote repo, the Jenkinsfile falls back to `npm install`.
+
 ## Docker
 The backend container needs a MongoDB container. Do not use `127.0.0.1` for
 Mongo URI inside Docker because `localhost` points to the backend container itself.
