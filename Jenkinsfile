@@ -64,16 +64,30 @@ node {
             '''
         }
 
-        // Same Jenkins config as frontend: server name "sonarqube", tool "SonarQubeScanner".
-        // Creates/updates project key "backend-repo" (see sonar-project.properties).
+        // Server: Manage Jenkins → SonarQube servers → name "sonarqube".
+        // Scanner: Prefer Jenkins tool "SonarQubeScanner"; else `sonar-scanner` on agent PATH.
         stage('SonarQube Analysis') {
             withSonarQubeEnv('sonarqube') {
-                def scannerHome = tool 'SonarQubeScanner'
-                sh """
-                    set -eux
-                    . "\${WORKSPACE}/.jenkins-node-env"
-                    "${scannerHome}/bin/sonar-scanner"
-                """
+                script {
+                    def scannerCmd
+                    try {
+                        def scannerHome = tool 'SonarQubeScanner'
+                        scannerCmd = "${scannerHome}/bin/sonar-scanner"
+                    } catch (Throwable ignored) {
+                        echo "SonarQubeScanner tool not defined in Jenkins; trying sonar-scanner on PATH."
+                        def rc = sh(script: 'command -v sonar-scanner >/dev/null 2>&1', returnStatus: true)
+                        if (rc != 0) {
+                            error '''Sonar scanner missing. Add under Manage Jenkins → Tools → SonarQube Scanner:
+Name: SonarQubeScanner (install automatically), OR install sonar-scanner CLI on this agent.'''
+                        }
+                        scannerCmd = 'sonar-scanner'
+                    }
+                    sh """
+                        set -eux
+                        . "\${WORKSPACE}/.jenkins-node-env"
+                        "${scannerCmd}"
+                    """
+                }
             }
         }
 
