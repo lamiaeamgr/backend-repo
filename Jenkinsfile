@@ -5,6 +5,9 @@ node {
     def IMAGE_NAME = 'backend-repo:latest'
     def CONTAINER_NAME = 'backend-repo-container'
     def NODE_VERSION = '20.18.1'
+    // MUST match SonarQube → Configure System → SonarQube servers → "Name" (case-sensitive). Jenkins default is often "SonarQube".
+    // Override per job: set environment variable SONARQUBE_SERVER_NAME.
+    def sonarInstallation = (env.SONARQUBE_SERVER_NAME ?: 'SonarQube').trim()
 
     def buildOk = false
     try {
@@ -64,10 +67,9 @@ node {
             '''
         }
 
-        // Server: Manage Jenkins → SonarQube servers → name "sonarqube".
-        // Scanner: Prefer Jenkins tool "SonarQubeScanner"; else `sonar-scanner` on agent PATH.
+        // Scanner: Jenkins tool SonarQubeScanner, else sonar-scanner on PATH.
         stage('SonarQube Analysis') {
-            withSonarQubeEnv('sonarqube') {
+            withSonarQubeEnv(sonarInstallation) {
                 script {
                     def scannerCmd
                     try {
