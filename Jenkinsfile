@@ -4,7 +4,6 @@ pipeline {
   environment {
     IMAGE_NAME = "backend-repo:latest"
     CONTAINER_NAME = "backend-repo-container"
-    SLACK_WEBHOOK_URL = credentials('backend-slack-webhook')
   }
 
   stages {
@@ -36,7 +35,7 @@ pipeline {
       steps {
         sh '''
           docker rm -f $CONTAINER_NAME || true
-          docker run -d --name $CONTAINER_NAME -p 5000:5000 --env-file .env $IMAGE_NAME
+          docker run -d --name $CONTAINER_NAME -p 5000:5000 --env-file .env.docker $IMAGE_NAME
         '''
       }
     }
@@ -44,18 +43,30 @@ pipeline {
 
   post {
     success {
-      sh '''
-        curl -X POST -H "Content-type: application/json" \
-        --data '{"text":"Backend pipeline succeeded."}' \
-        $SLACK_WEBHOOK_URL
-      '''
+      script {
+        node(null) {
+          withCredentials([string(credentialsId: 'backend-slack-webhook', variable: 'SLACK_URL')]) {
+            sh '''
+              curl -sS -X POST -H "Content-type: application/json" \
+                --data '{"text":"Backend pipeline succeeded."}' \
+                "$SLACK_URL"
+            '''
+          }
+        }
+      }
     }
     failure {
-      sh '''
-        curl -X POST -H "Content-type: application/json" \
-        --data '{"text":"Backend pipeline failed."}' \
-        $SLACK_WEBHOOK_URL
-      '''
+      script {
+        node(null) {
+          withCredentials([string(credentialsId: 'backend-slack-webhook', variable: 'SLACK_URL')]) {
+            sh '''
+              curl -sS -X POST -H "Content-type: application/json" \
+                --data '{"text":"Backend pipeline failed."}' \
+                "$SLACK_URL"
+            '''
+          }
+        }
+      }
     }
   }
 }
